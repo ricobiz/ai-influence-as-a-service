@@ -1,36 +1,42 @@
 """
-Content Generation Bot for AI-Influence as a Service
+Content Generation Bot for AI-Influence-as-a-Service Platform
 Author: ricobiz
-This bot generates unique trending text using LLM (OpenAI GPT) for platform campaigns.
-Orchestratable. Expandable for fine-tuning, multi-modal outputs, or platform adaptation.
+Implements orchestratable AI content generation using OpenAI GPT models.
+Provides entrypoint for orchestrator/agents.py.
 """
 import os
-import openai
 from typing import Dict, Any
+import openai
+import logging
 
-# Load from environment or global config (prod-ready: use proper secret management)
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', 'sk-...')
+# Load API key from environment (assumes set in deployment)
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 openai.api_key = OPENAI_API_KEY
 
-class ContentGenBot:
-      def __init__(self, model='gpt-4', temperature=0.85):
-                self.model = model
-                self.temperature = temperature
+def generate_trending_content(prompt: str, max_tokens=256, model="gpt-4") -> str:
+          """Generate trending campaign content using GPT-4 API."""
+          try:
+                        response = openai.ChatCompletion.create(
+                                          model=model,
+                                          messages=[{"role": "user", "content": prompt}],
+                                          max_tokens=max_tokens,
+                                          temperature=0.9
+                        )
+                        content = response['choices'][0]['message']['content']
+                        logging.info(f"[ContentBot] Generated content: {content[:60]}...")
+                        return content
+except Exception as e:
+        logging.error(f"[ContentBot] OpenAI error: {e}")
+        return "[Error generating content]"
 
-      def generate(self, prompt: str, **kwargs) -> str:
-                response = openai.ChatCompletion.create(
-                              model=self.model,
-                              messages=[{"role": "system", "content": "You are a creative viral content generator."},
-                                                              {"role": "user", "content": prompt}],
-                              temperature=kwargs.get('temperature', self.temperature),
-                              max_tokens=kwargs.get('max_tokens', 400),
-                              top_p=kwargs.get('top_p', 0.95),
-                )
-                return response['choices'][0]['message']['content']
+def run_content_gen_task(topic: str = "", style: str = "", platform: str = "") -> str:
+          """Entrypoint for orchestrator: Generate campaign text."""
+          if not topic:
+                        topic = "новый тренд в социальных сетях и маркетплейсах"
+                    prompt = f"Напиши кликабельный пост или заголовок для {platform or 'всех платформ'} о '{topic}' в стиле {style or 'маркетингового инфлюенсера'} для продвижения."
+    return generate_trending_content(prompt)
 
-  # Orchestratable bot entrypoint
-  def run_content_gen_task(payload: Dict[str, Any]) -> str:
-        """ 
-            Args: payload={'prompt': str, optional LLM args...}
-                """
-        cg = ContentGenBot(model=payload.get('model', 'gpt-4'), t
+# For direct CLI testing
+if __name__ == "__main__":
+          import sys
+    topic = 
