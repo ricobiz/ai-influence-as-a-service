@@ -1,0 +1,10 @@
+fastapi
+selenium
+openai
+pandas
+aiohttp
+uvicorn
+grafana-client
+python-dotenv
+requests
+httpx
